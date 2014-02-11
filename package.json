@@ -3,5 +3,8 @@
   "version": "0.0.0",
   "description": "",
   "main": "console.js",
-  "author": "Lloyd Brookes"
+  "author": "Lloyd Brookes",
+  "dependencies": {
+    "wodge": "~0.1.5"
+  }
 }

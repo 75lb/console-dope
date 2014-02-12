@@ -1,8 +1,8 @@
 {
   "name": "more-console",
   "version": "0.1.0",
-  "description": "",
-  "main": "console.js",
+  "description": "adds colouring and cursor control features to console",
+  "main": "more-console.js",
   "author": "Lloyd Brookes",
   "dependencies": {
     "wodge": "~0.1.5"

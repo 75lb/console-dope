@@ -1,6 +1,6 @@
 {
   "name": "more-console",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "adds colouring and cursor control features to console",
   "main": "more-console.js",
   "author": "Lloyd Brookes",

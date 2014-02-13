@@ -2,7 +2,7 @@
 var wodge = require("wodge"),
     util = require("util");
 
-var ansi = {
+var sgr = {
     black: 30,
     red: 31,
     green: 32,
@@ -14,61 +14,90 @@ var ansi = {
     bold: 1,
     underline: 4
 };
-var ansiFormat = "\x1b[%sm%s\x1b[0m";
+var sgrFormat = "\x1b[%sm%s\x1b[0m";
+var otherCodes = {
+    hide: "?25l",
+    show: "?25h"
+}
 
 var log = console.log,
     err = console.error,
-    formatFlags = [],
+    sgrFlags = [],
+    otherFlags = [],
     out = console.writeStream || process.stdout;
 
 var format = util.format;
 
 util.format = function(){
     var output = format.apply(null, arguments);
-    output = output.replace(/%u{(.*?)}/g, format(ansiFormat, ansi.underline, "$1"));
+    output = output.replace(/%u{(.*?)}/g, format(sgrFormat, sgr.underline, "$1"));
     // process.stdout.write(output + "\n");
     return output;
 };
 
-function addFormatProperty(format){
-    Object.defineProperty(console, format, { 
+function addSgrProperty(flag){
+    Object.defineProperty(console, flag, { 
         enumerable: true, 
         get: function(){
-            formatFlags.push(format);
+            sgrFlags.push(flag);
             return console;
         }
     });
 }
-Object.keys(ansi).forEach(addFormatProperty);
+Object.keys(sgr).forEach(addSgrProperty);
+
+function addOtherProperty(flag){
+    Object.defineProperty(console, flag, { 
+        enumerable: true, 
+        get: function(){
+            otherFlags.push(flag);
+            return console;
+        }
+    });
+}
+// Object.keys(otherCodes).forEach(addOtherProperty);
 
 
 console.log = function(){
     var args = wodge.array(arguments),
-        codes = formatFlags.map(function(format){ return ansi[format]; });
+        codes = sgrFlags.map(function(format){ return sgr[format]; });
         
     out.write(util.format("\x1b[%sm", codes.join(";")));
+    out.write(otherFlags.reduce(function(prev, curr){
+        return prev + "\x1b[" + otherCodes[curr];
+    }, ""));
     log.apply(this, arguments);
     out.write("\x1b[0m");
-    formatFlags = [];
+    sgrFlags = [];
     return console;
 };
 
 console.error = function(){
     var args = wodge.array(arguments),
-        codes = formatFlags.map(function(format){ return ansi[format]; });
+        codes = sgrFlags.map(function(format){ return sgr[format]; });
         
     process.stderr.write(util.format("\x1b[%sm", codes.join(";")));
     err.apply(this, arguments);
     process.stderr.write("\x1b[0m");
-    formatFlags = [];
+    sgrFlags = [];
     return console;
 };
 
 console.write = function(txt){
-    var codes = formatFlags.map(function(format){ return ansi[format]; });
-    out.write(util.format(ansiFormat, codes.join(";"), txt));
-    formatFlags = [];
+    var codes = sgrFlags.map(function(format){ return sgr[format]; });
+    out.write(otherFlags.reduce(function(prev, curr){
+        return prev + "\x1b[" + otherCodes[curr];
+    }, ""));
+    out.write(util.format(sgrFormat, codes.join(";"), txt));
+    sgrFlags = [];
     return console;
+};
+
+console.hide = function(){
+    out.write("\x1b[" + otherCodes.hide);
+};
+console.show = function(){
+    out.write("\x1b[" + otherCodes.show);
 };
 
 console.column = function(col){

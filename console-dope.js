@@ -18,7 +18,7 @@ var sgrFormat = "\x1b[%sm%s\x1b[0m";
 var otherCodes = {
     hide: "?25l",
     show: "?25h"
-}
+};
 
 var log = console.log,
     err = console.error,
@@ -93,10 +93,10 @@ console.write = function(txt){
     return console;
 };
 
-console.hide = function(){
+console.hideCursor = function(){
     out.write("\x1b[" + otherCodes.hide);
 };
-console.show = function(){
+console.showCursor = function(){
     out.write("\x1b[" + otherCodes.show);
 };
 

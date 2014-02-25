@@ -1,8 +1,8 @@
 {
-  "name": "more-console",
+  "name": "console-dope",
   "version": "0.1.1",
-  "description": "adds colouring and cursor control features to console",
-  "main": "more-console.js",
+  "description": "adds colouring and cursor control features to the console",
+  "main": "console-dope.js",
   "author": "Lloyd Brookes",
   "dependencies": {
     "wodge": "~0.1.5"

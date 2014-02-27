@@ -2,36 +2,49 @@
 var wodge = require("wodge"),
     util = require("util");
 
+var log = console.log,
+    err = console.error,
+    format = util.format,
+    otherFlags = [],
+    out = console.writeStream || process.stdout;
+
+/*
+Select Graphic Rendition
+http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+*/
 var sgr = {
-    black: 30,
-    red: 31,
-    green: 32,
-    yellow: 33,
-    blue: 34,
-    magenta: 35,
-    cyan: 36,
-    white: 37,
-    bold: 1,
-    underline: 4
+    codes: {
+        reset: 0,
+        bold: 1,
+        italic: 3,
+        underline: 4,
+        black: 30,
+        red: 31,
+        green: 32,
+        yellow: 33,
+        blue: 34,
+        magenta: 35,
+        cyan: 36,
+        white: 37
+    },
+    flags: [],
+    format: "\x1b[%sm%s\x1b[0m",
+    seq: function(code){
+        return format("\x1b[%sm", this.codes[code]);
+    }
 };
-var sgrFormat = "\x1b[%sm%s\x1b[0m";
+
 var otherCodes = {
     hide: "?25l",
     show: "?25h"
 };
 
-var log = console.log,
-    err = console.error,
-    sgrFlags = [],
-    otherFlags = [],
-    out = console.writeStream || process.stdout;
-
-var format = util.format;
-
 util.format = function(){
     var output = format.apply(null, arguments);
-    output = output.replace(/%u{(.*?)}/g, format(sgrFormat, sgr.underline, "$1"));
-    // process.stdout.write(output + "\n");
+    Object.keys(sgr.codes).forEach(function(code){
+        var re = new RegExp("%" + code + "{(.*?)}", "g");
+        output = output.replace(re, sgr.seq(code) + "$1");
+    });
     return output;
 };
 
@@ -39,12 +52,12 @@ function addSgrProperty(flag){
     Object.defineProperty(console, flag, { 
         enumerable: true, 
         get: function(){
-            sgrFlags.push(flag);
+            sgr.flags.push(flag);
             return console;
         }
     });
 }
-Object.keys(sgr).forEach(addSgrProperty);
+Object.keys(sgr.codes).forEach(addSgrProperty);
 
 function addOtherProperty(flag){
     Object.defineProperty(console, flag, { 
@@ -60,36 +73,36 @@ function addOtherProperty(flag){
 
 console.log = function(){
     var args = wodge.array(arguments),
-        codes = sgrFlags.map(function(format){ return sgr[format]; });
+        codes = sgr.flags.map(function(format){ return sgr.codes[format]; });
         
     out.write(util.format("\x1b[%sm", codes.join(";")));
-    out.write(otherFlags.reduce(function(prev, curr){
-        return prev + "\x1b[" + otherCodes[curr];
-    }, ""));
+    // out.write(otherFlags.reduce(function(prev, curr){
+    //     return prev + "\x1b[" + otherCodes[curr];
+    // }, ""));
     log.apply(this, arguments);
     out.write("\x1b[0m");
-    sgrFlags = [];
+    sgr.flags = [];
     return console;
 };
 
 console.error = function(){
     var args = wodge.array(arguments),
-        codes = sgrFlags.map(function(format){ return sgr[format]; });
+        codes = sgr.flags.map(function(format){ return sgr.codes[format]; });
         
     process.stderr.write(util.format("\x1b[%sm", codes.join(";")));
     err.apply(this, arguments);
     process.stderr.write("\x1b[0m");
-    sgrFlags = [];
+    sgr.flags = [];
     return console;
 };
 
 console.write = function(txt){
-    var codes = sgrFlags.map(function(format){ return sgr[format]; });
-    out.write(otherFlags.reduce(function(prev, curr){
-        return prev + "\x1b[" + otherCodes[curr];
-    }, ""));
-    out.write(util.format(sgrFormat, codes.join(";"), txt));
-    sgrFlags = [];
+    var codes = sgr.flags.map(function(format){ return sgr.codes[format]; });
+    // out.write(otherFlags.reduce(function(prev, curr){
+    //     return prev + "\x1b[" + otherCodes[curr];
+    // }, ""));
+    out.write(util.format(sgr.format, codes.join(";"), txt));
+    sgr.flags = [];
     return console;
 };
 

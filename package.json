@@ -3,8 +3,5 @@
   "version": "0.2.0",
   "description": "adds colouring and cursor control features to the console",
   "main": "console-dope.js",
-  "author": "Lloyd Brookes",
-  "dependencies": {
-    "wodge": "~0.1.5"
-  }
+  "author": "Lloyd Brookes"
 }

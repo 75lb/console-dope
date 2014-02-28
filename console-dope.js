@@ -1,12 +1,14 @@
 "use strict";
-var wodge = require("wodge"),
-    util = require("util");
+var util = require("util");
 
 var log = console.log,
     err = console.error,
     format = util.format,
     otherFlags = [],
     out = console.writeStream || process.stdout;
+
+/* Control Sequence Initiator */
+var csi = "\x1b[";
 
 /*
 Select Graphic Rendition
@@ -27,10 +29,15 @@ var sgr = {
         cyan: 36,
         white: 37
     },
-    flags: [],
-    format: "\x1b[%sm%s\x1b[0m",
     seq: function(code){
-        return format("\x1b[%sm", this.codes[code]);
+        return format("%s%sm", csi, this.codes[code]);
+    },
+    activeFlags: [],
+    activeSeq: function(){
+        var codes = this.activeFlags.map(function(format){
+            return sgr.codes[format];
+        });
+        return format("%s%sm", csi, codes.join(";"));
     }
 };
 
@@ -39,20 +46,31 @@ var otherCodes = {
     show: "?25h"
 };
 
+/*
+Override util.format to additionally replace `%blue{blah}` style tokens
+*/
 util.format = function(){
     var output = format.apply(null, arguments);
     Object.keys(sgr.codes).forEach(function(code){
-        var re = new RegExp("%" + code + "{(.*?)}", "g");
-        output = output.replace(re, sgr.seq(code) + "$1");
+        var token = new RegExp("%" + code + "{(.*?)}", "g");
+        if (token.test(output)){
+            output = output.replace(
+                token,
+                format("%s%s%s%s", sgr.seq(code), "$1", sgr.seq("reset"), sgr.activeSeq())
+            );
+        }
     });
     return output;
 };
 
+/*
+Define console properties, `console.red` etc.
+*/
 function addSgrProperty(flag){
-    Object.defineProperty(console, flag, { 
-        enumerable: true, 
+    Object.defineProperty(console, flag, {
+        enumerable: true,
         get: function(){
-            sgr.flags.push(flag);
+            sgr.activeFlags.push(flag);
             return console;
         }
     });
@@ -60,8 +78,8 @@ function addSgrProperty(flag){
 Object.keys(sgr.codes).forEach(addSgrProperty);
 
 function addOtherProperty(flag){
-    Object.defineProperty(console, flag, { 
-        enumerable: true, 
+    Object.defineProperty(console, flag, {
+        enumerable: true,
         get: function(){
             otherFlags.push(flag);
             return console;
@@ -72,37 +90,32 @@ function addOtherProperty(flag){
 
 
 console.log = function(){
-    var args = wodge.array(arguments),
-        codes = sgr.flags.map(function(format){ return sgr.codes[format]; });
-        
-    out.write(util.format("\x1b[%sm", codes.join(";")));
+    out.write(sgr.activeSeq());
     // out.write(otherFlags.reduce(function(prev, curr){
     //     return prev + "\x1b[" + otherCodes[curr];
     // }, ""));
     log.apply(this, arguments);
-    out.write("\x1b[0m");
-    sgr.flags = [];
+    out.write(sgr.seq("reset"));
+    sgr.activeFlags = [];
     return console;
 };
 
 console.error = function(){
-    var args = wodge.array(arguments),
-        codes = sgr.flags.map(function(format){ return sgr.codes[format]; });
-        
-    process.stderr.write(util.format("\x1b[%sm", codes.join(";")));
+    process.stderr.write(sgr.activeSeq());
     err.apply(this, arguments);
-    process.stderr.write("\x1b[0m");
-    sgr.flags = [];
+    process.stderr.write(sgr.seq("reset"));
+    sgr.activeFlags = [];
     return console;
 };
 
 console.write = function(txt){
-    var codes = sgr.flags.map(function(format){ return sgr.codes[format]; });
     // out.write(otherFlags.reduce(function(prev, curr){
     //     return prev + "\x1b[" + otherCodes[curr];
     // }, ""));
-    out.write(util.format(sgr.format, codes.join(";"), txt));
-    sgr.flags = [];
+    out.write(sgr.activeSeq());
+    out.write(txt);
+    out.write(sgr.seq("reset"));
+    sgr.activeFlags = [];
     return console;
 };
 

@@ -34,10 +34,14 @@ var sgr = {
     },
     activeFlags: [],
     activeSeq: function(){
-        var codes = this.activeFlags.map(function(format){
-            return sgr.codes[format];
-        });
-        return format("%s%sm", csi, codes.join(";"));
+        if (this.activeFlags.length){
+            var codes = this.activeFlags.map(function(format){
+                return sgr.codes[format];
+            });
+            return format("%s%sm", csi, codes.join(";"));
+        } else {
+            return "";
+        }
     }
 };
 
@@ -113,7 +117,7 @@ console.write = function(txt){
     //     return prev + "\x1b[" + otherCodes[curr];
     // }, ""));
     out.write(sgr.activeSeq());
-    out.write(txt);
+    out.write(String(txt));
     out.write(sgr.seq("reset"));
     sgr.activeFlags = [];
     return console;

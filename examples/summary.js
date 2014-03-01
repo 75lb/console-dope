@@ -1,5 +1,7 @@
 require("../");
 
+console.hideCursor();
+
 console.log("console.log");
 console.write("console.write\n");
 console.error("console.error");
@@ -19,3 +21,13 @@ console.bold.underline.blue.log("console.%s.underline.%s.log using format string
 console.log("console.log %underline{%s} inside format string", "underline");
 console.error("console.error %underline{%s} inside %underline{format} string", "underline");
 console.underline.log("console.underline.log with %blue{blue} inside the string");
+
+console.column(10).log("console.column(10).log");
+console.column(10).write("console.column(10).write\n");
+console.column(10).error("console.column(10).error");
+
+console.log(1);
+console.write(2);
+console.error(3);
+
+console.showCursor();

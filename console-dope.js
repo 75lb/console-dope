@@ -7,6 +7,8 @@ var log = console.log,
     otherFlags = [],
     out = console.writeStream || process.stdout;
 
+var dope = module.exports = {};
+
 /* Control Sequence Initiator */
 var csi = "\x1b[";
 
@@ -45,6 +47,28 @@ var sgr = {
     }
 };
 
+var EL = {
+    codes: {
+        clearLineToEnd: 0,
+        clearLineToBeginnng: 1,
+        clearLine: 2
+    },
+    seq: function(code){
+        return format("%s%sK", csi, this.codes[code]);
+    },
+    activeFlags: [],
+    activeSeq: function(){
+        if (this.activeFlags.length){
+            var codes = this.activeFlags.map(function(format){
+                return sgr.codes[format];
+            });
+            return format("%s%sK", csi, codes.join(";"));
+        } else {
+            return "";
+        }
+    }
+}
+
 var otherCodes = {
     hide: "?25l",
     show: "?25h"
@@ -64,75 +88,77 @@ util.format = function(){
             );
         }
     });
+    Object.keys(EL.codes).forEach(function(code){
+        var token = new RegExp("%" + code + "{(.*?)}", "g");
+        if (token.test(output)){
+            output = output.replace(
+                token,
+                format("%s%s%s%s", EL.seq(code), "$1", EL.seq("reset"), EL.activeSeq())
+            );
+        }
+    });
     return output;
 };
 
-/*
-Define console properties, `console.red` etc.
-*/
+/* Define SGR properties, `dope.red` etc. */
 function addSgrProperty(flag){
-    Object.defineProperty(console, flag, {
+    Object.defineProperty(dope, flag, {
         enumerable: true,
         get: function(){
             sgr.activeFlags.push(flag);
-            return console;
+            return dope;
         }
     });
 }
 Object.keys(sgr.codes).forEach(addSgrProperty);
 
-function addOtherProperty(flag){
-    Object.defineProperty(console, flag, {
+/* Define EL properties, `dope.clearLine` etc. */
+function addELProperty(flag){
+    Object.defineProperty(dope, flag, {
         enumerable: true,
         get: function(){
-            otherFlags.push(flag);
-            return console;
+            EL.activeFlags.push(flag);
+            return dope;
         }
     });
 }
-// Object.keys(otherCodes).forEach(addOtherProperty);
+Object.keys(EL.codes).forEach(addELProperty);
 
-
-console.log = function(){
+dope.log = function(){
     out.write(sgr.activeSeq());
-    // out.write(otherFlags.reduce(function(prev, curr){
-    //     return prev + "\x1b[" + otherCodes[curr];
-    // }, ""));
+    out.write(EL.activeSeq());
     log.apply(this, arguments);
     out.write(sgr.seq("reset"));
     sgr.activeFlags = [];
-    return console;
+    return this;
 };
 
-console.error = function(){
+dope.error = function(){
     process.stderr.write(sgr.activeSeq());
+    process.stderr.write(EL.activeSeq());
     err.apply(this, arguments);
     process.stderr.write(sgr.seq("reset"));
     sgr.activeFlags = [];
-    return console;
+    return this;
 };
 
-console.write = function(txt){
-    // out.write(otherFlags.reduce(function(prev, curr){
-    //     return prev + "\x1b[" + otherCodes[curr];
-    // }, ""));
+dope.write = function(txt){
     out.write(sgr.activeSeq());
+    out.write(EL.activeSeq());
     out.write(String(txt));
     out.write(sgr.seq("reset"));
     sgr.activeFlags = [];
-    return console;
+    return this;
 };
 
-console.hideCursor = function(){
+dope.hideCursor = function(){
     out.write("\x1b[" + otherCodes.hide);
 };
-console.showCursor = function(){
+dope.showCursor = function(){
     out.write("\x1b[" + otherCodes.show);
 };
 
-console.column = function(col){
+dope.column = function(col){
     out.write(util.format("\x1b[%dG", col));
-    return console;
+    return this;
 };
-
-exports = console;

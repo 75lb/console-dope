@@ -1,33 +1,36 @@
-require("../");
+var dope = require("../");
 
-console.hideCursor();
+dope.hideCursor();
 
-console.log("console.log");
-console.write("console.write\n");
-console.error("console.error");
+dope.log("dope.log");
+dope.write("dope.write\n");
+dope.error("dope.error");
 
-console.red.log("console.red.log");
-console.red.write("console.red.write\n");
-console.red.error("console.red.error");
+dope.red.log("dope.red.log");
+dope.red.write("dope.red.write\n");
+dope.red.error("dope.red.error");
 
-console.red.underline.log("console.red.underline.log");
-console.red.underline.write("console.red.underline.write\n");
-console.red.underline.error("console.red.underline.error");
+dope.red.underline.log("dope.red.underline.log");
+dope.red.underline.write("dope.red.underline.write\n");
+dope.red.underline.error("dope.red.underline.error");
 
-console.bold.log("console.bold.log");
-console.bold.magenta.log("console.bold.magenta.log", "with", { multiple: "ARGS" });
-console.bold.underline.blue.log("console.%s.underline.%s.log using format string", "bold", "blue");
+dope.bold.log("dope.bold.log");
+dope.bold.magenta.log("dope.bold.magenta.log", "with", { multiple: "ARGS" });
+dope.bold.underline.blue.log("dope.%s.underline.%s.log using format string", "bold", "blue");
 
-console.log("console.log %underline{%s} inside format string", "underline");
-console.error("console.error %underline{%s} inside %underline{format} string", "underline");
-console.underline.log("console.underline.log with %blue{blue} inside the string");
+dope.log("dope.log %underline{%s} inside format string", "underline");
+dope.error("dope.error %underline{%s} inside %underline{format} string", "underline");
+dope.underline.log("dope.underline.log with %blue{blue} inside the string");
 
-console.column(10).log("console.column(10).log");
-console.column(10).write("console.column(10).write\n");
-console.column(10).error("console.column(10).error");
+dope.column(10).log("dope.column(10).log");
+dope.column(10).write("dope.column(10).write\n");
+dope.column(10).error("dope.column(10).error");
 
-console.log(1);
-console.write(2);
-console.error(3);
+dope.log(1);
+dope.write(2);
+dope.error(3);
 
-console.showCursor();
+dope.write("this is a line innit");
+dope.clearLine.column(1).log("dope.clearLine.column(1).log");
+
+dope.showCursor();

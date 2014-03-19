@@ -127,7 +127,7 @@ Object.keys(EL.codes).forEach(addELProperty);
 dope.log = function(){
     out.write(sgr.activeSeq());
     out.write(EL.activeSeq());
-    log.apply(this, arguments);
+    log.apply(console, arguments);
     out.write(sgr.seq("reset"));
     sgr.activeFlags = [];
     return this;
@@ -136,7 +136,7 @@ dope.log = function(){
 dope.error = function(){
     process.stderr.write(sgr.activeSeq());
     process.stderr.write(EL.activeSeq());
-    err.apply(this, arguments);
+    err.apply(console, arguments);
     process.stderr.write(sgr.seq("reset"));
     sgr.activeFlags = [];
     return this;

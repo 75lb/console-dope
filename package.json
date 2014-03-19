@@ -3,5 +3,6 @@
   "version": "0.3.0",
   "description": "adds colouring and cursor control features to the console",
   "main": "console-dope.js",
-  "author": "Lloyd Brookes"
+  "author": "Lloyd Brookes",
+  "repository": "https://github.com/75lb/console-dope"
 }

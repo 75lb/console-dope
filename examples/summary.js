@@ -14,6 +14,14 @@ dope.red.underline.log("dope.red.underline.log");
 dope.red.underline.write("dope.red.underline.write\n");
 dope.red.underline.error("dope.red.underline.error");
 
+dope.bold.italic.log("dope.bold.italic.log");
+dope.bold.italic.write("dope.bold.italic.write\n");
+dope.bold.italic.error("dope.bold.italic.error");
+
+dope.negative.log("dope.negative.log");
+dope.negative.write("dope.negative.write\n");
+dope.negative.error("dope.negative.error");
+
 dope.bold.log("dope.bold.log");
 dope.bold.magenta.log("dope.bold.magenta.log", "with", { multiple: "ARGS" });
 dope.bold.underline.blue.log("dope.%s.underline.%s.log using format string", "bold", "blue");

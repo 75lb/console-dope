@@ -22,6 +22,7 @@ var sgr = {
         bold: 1,
         italic: 3,
         underline: 4,
+        negative: 7,
         black: 30,
         red: 31,
         green: 32,

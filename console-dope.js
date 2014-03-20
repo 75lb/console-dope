@@ -5,7 +5,8 @@ var log = console.log,
     err = console.error,
     format = util.format,
     otherFlags = [],
-    out = console.writeStream || process.stdout;
+    out = console.writeStream || process.stdout,
+    inBrowser = typeof window !== "undefined";
 
 var dope = module.exports = {};
 
@@ -45,6 +46,20 @@ var sgr = {
         } else {
             return "";
         }
+    },
+    css: function(){
+        var css = "";
+        var styles = this.activeFlags.map(function(flag){
+            switch(flag){
+            case "bold": 
+                return "font-weight: bold";
+            case "italic": 
+                return "font-style: italic";
+            case "underline": 
+                return "text-decoration: underline";
+            }
+        });
+        return styles.join(";");
     }
 };
 
@@ -126,10 +141,22 @@ function addELProperty(flag){
 Object.keys(EL.codes).forEach(addELProperty);
 
 dope.log = function(){
-    out.write(sgr.activeSeq());
-    out.write(EL.activeSeq());
-    log.apply(console, arguments);
-    out.write(sgr.seq("reset"));
+    if (inBrowser){
+        arguments[0] = "%c" + arguments[0];
+        arguments[6] = arguments[5];
+        arguments[5] = arguments[4];
+        arguments[4] = arguments[3];
+        arguments[3] = arguments[2];
+        arguments[2] = arguments[1];
+        arguments[1] = sgr.css();
+        arguments.length++;
+        log.apply(console, arguments);
+    } else {
+        out.write(sgr.activeSeq());
+        out.write(EL.activeSeq());
+        log.apply(console, arguments);
+        out.write(sgr.seq("reset"));
+    }
     sgr.activeFlags = [];
     return this;
 };
@@ -162,4 +189,8 @@ dope.showCursor = function(){
 dope.column = function(col){
     out.write(util.format("\x1b[%dG", col));
     return this;
+};
+
+dope.test = function(){
+    require("./examples/summary");
 };

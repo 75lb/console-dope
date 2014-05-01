@@ -1,4 +1,4 @@
-var dope = require("../");
+var dope = require("../lib/console-dope");
 
 dope.hideCursor();
 
